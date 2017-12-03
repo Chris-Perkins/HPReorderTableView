@@ -40,8 +40,6 @@
     CGFloat _reorderDragViewShadowOpacity;
 }
 
-@dynamic delegate;
-
 static NSTimeInterval HPReorderTableViewAnimationDuration = 0.2;
 
 static NSString *HPReorderTableViewCellReuseIdentifier = @"HPReorderTableViewCellReuseIdentifier";
@@ -103,11 +101,21 @@ static NSString *HPReorderTableViewCellReuseIdentifier = @"HPReorderTableViewCel
     switch (gestureRecognizer.state)
     {
         case UIGestureRecognizerStateBegan:
+        {
             [self didBeginLongPressGestureRecognizer:gestureRecognizer];
+            const CGPoint location = [gestureRecognizer locationInView:self];
+            NSIndexPath *indexPath = [self indexPathForRowAtPoint:location];
+            [[self cellForRowAtIndexPath:indexPath] setAlpha:0];
             break;
+        }
         case UIGestureRecognizerStateChanged:
+        {
             [self didChangeLongPressGestureRecognizer:gestureRecognizer];
+            const CGPoint location = [gestureRecognizer locationInView:self];
+            NSIndexPath *indexPath = [self indexPathForRowAtPoint:location];
+            [[self cellForRowAtIndexPath:indexPath] setAlpha:0];
             break;
+        }
         case UIGestureRecognizerStateEnded:
             [self didEndLongPressGestureRecognizer:gestureRecognizer];
         default:
@@ -123,6 +131,7 @@ static NSString *HPReorderTableViewCellReuseIdentifier = @"HPReorderTableViewCel
     {
         UITableViewCell *cell = [self dequeueReusableCellWithIdentifier:HPReorderTableViewCellReuseIdentifier];
         cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.layer.zPosition = -10;
         return cell;
     }
     else
@@ -282,9 +291,6 @@ static void HPGestureRecognizerCancel(UIGestureRecognizer *gestureRecognizer)
                      } completion:^(BOOL finished) {
                          [self reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
                          [self performSelector:@selector(removeReorderDragView) withObject:nil afterDelay:0]; // Prevent flicker
-                         if ([self.delegate respondsToSelector:@selector(tableView: didEndReorderingRowAtIndexPath:)]) {
-                           [self.delegate tableView:self didEndReorderingRowAtIndexPath:indexPath];
-                         }
                      }];
 }
 
@@ -296,7 +302,7 @@ static void HPGestureRecognizerCancel(UIGestureRecognizer *gestureRecognizer)
 - (void)reorderCurrentRowToIndexPath:(NSIndexPath*)toIndexPath
 {
     [self beginUpdates];
-    [self moveRowAtIndexPath:toIndexPath toIndexPath:_reorderCurrentIndexPath]; // Order is important to keep the empty cell behind
+    [self moveRowAtIndexPath:_reorderCurrentIndexPath toIndexPath:toIndexPath];
     if ([self.dataSource respondsToSelector:@selector(tableView:moveRowAtIndexPath:toIndexPath:)])
     {
         [self.dataSource tableView:self moveRowAtIndexPath:_reorderCurrentIndexPath toIndexPath:toIndexPath];
@@ -441,3 +447,4 @@ static void HPGestureRecognizerCancel(UIGestureRecognizer *gestureRecognizer)
 }
 
 @end
+
