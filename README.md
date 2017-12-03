@@ -1,3 +1,6 @@
+## This is a fork of the original HPReorderableTableView project. Info below
+This fork was created to fix some bugs in the original repository.
+
 HPReorderTableView
 ==================
 
